@@ -1,0 +1,54 @@
+{
+  "name": "earthlive-goes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --mode development --open",
+    "dev": "webpack --mode development",
+    "build": "webpack --mode production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vannizhang/earthlive-goes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vannizhang/earthlive-goes/issues"
+  },
+  "homepage": "https://github.com/vannizhang/earthlive-goes#readme",
+  "devDependencies": {
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.4",
+    "css-loader": "^3.2.0",
+    "file-loader": "^4.2.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "node-sass": "^4.13.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.3",
+    "sass-loader": "^8.0.0",
+    "source-map-loader": "^0.2.4",
+    "style-loader": "^1.0.0",
+    "terser-webpack-plugin": "^2.2.1",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.2",
+    "url-loader": "^2.2.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.9.0"
+  },
+  "dependencies": {
+    "@types/arcgis-js-api": "^4.13.0",
+    "calcite-web": "github:Esri/calcite-web#v1.2.5",
+    "esri-loader": "^2.12.0",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0"
+  }
+}
