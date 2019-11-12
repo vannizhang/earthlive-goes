@@ -2,6 +2,7 @@ import './style.scss'
 import * as React from 'react';
 
 import SceneView from '../SceneView';
+import GoesLayer from '../GoesLayer';
 
 import { getAvailableDates } from '../../services/GoesTileService';
 
@@ -12,7 +13,8 @@ interface IProps {
 }
 
 interface IState {
-    goesAvailableDates:Array<IGoesAvailableDate>
+    goesAvailableDates:Array<IGoesAvailableDate>,
+    index4ActiveDate:number
 }
 
 export default class App extends React.PureComponent<IProps, IState> {
@@ -21,7 +23,8 @@ export default class App extends React.PureComponent<IProps, IState> {
         super(props);
 
         this.state = {
-            goesAvailableDates: []
+            goesAvailableDates: [],
+            index4ActiveDate:0
         }
     }
 
@@ -41,9 +44,16 @@ export default class App extends React.PureComponent<IProps, IState> {
     }
 
     render(){
+        const { goesAvailableDates, index4ActiveDate } = this.state;
+
         return (
             <div className='app-content'>
-                <SceneView />
+                <SceneView>
+                    <GoesLayer 
+                        goesAvailableDates={goesAvailableDates}
+                        index4ActiveDate={index4ActiveDate}
+                    />
+                </SceneView>
             </div>
         );
     }

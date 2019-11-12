@@ -12,7 +12,7 @@ interface IProps {
 }
 
 interface IState {
-
+    sceneView:ISceneView
 }
 
 export default class SceneView extends React.PureComponent<IProps, IState> {
@@ -20,7 +20,12 @@ export default class SceneView extends React.PureComponent<IProps, IState> {
     private sceneViewContainerRef = React.createRef<HTMLDivElement>();
 
     constructor(props:IProps){
+        
         super(props);
+
+        this.state = {
+            sceneView: null
+        };
 
         loadCss();
     }
@@ -52,19 +57,46 @@ export default class SceneView extends React.PureComponent<IProps, IState> {
                 center: config["secene-view"].center
             });
 
+            sceneView.when(()=>{
+                this.setSecenView(sceneView);
+            })
+
         } catch(err){
             console.error(err);
         }
 
     }
 
+    setSecenView(sceneView:ISceneView){
+        this.setState({
+            sceneView
+        });
+    }
+
     render(){
+
+        const { sceneView } = this.state;
+
+        const childrenElements = React.Children.map(
+            this.props.children,
+            (child) => {
+                return React.cloneElement(child as React.ReactElement<any>, {
+                    sceneView,
+                });
+            }
+        );
+
         return (
-            <div 
-                className='scene-view-container'
-                ref={this.sceneViewContainerRef}
+            <div
+                className='secene-view-wrap'
             >
+                <div 
+                    className='scene-view-container'
+                    ref={this.sceneViewContainerRef}
+                ></div>
+                { childrenElements }
             </div>
+
         );
     }
 
