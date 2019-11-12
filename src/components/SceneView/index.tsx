@@ -7,12 +7,20 @@ import config from './config';
 import ISceneView from 'esri/views/SceneView';
 import IMap from 'esri/Map';
 
-export default class SceneView extends React.PureComponent {
+interface IProps {
+
+}
+
+interface IState {
+
+}
+
+export default class SceneView extends React.PureComponent<IProps, IState> {
 
     private sceneViewContainerRef = React.createRef<HTMLDivElement>();
 
-    constructor(){
-        super(null);
+    constructor(props:IProps){
+        super(props);
 
         loadCss();
     }
@@ -40,7 +48,7 @@ export default class SceneView extends React.PureComponent {
             const sceneView = new SceneView({
                 container,
                 map,
-                scale: 50000000,
+                scale: config["secene-view"].scale,
                 center: config["secene-view"].center
             });
 

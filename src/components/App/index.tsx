@@ -3,7 +3,42 @@ import * as React from 'react';
 
 import SceneView from '../SceneView';
 
-export default class App extends React.PureComponent {
+import { getAvailableDates } from '../../services/GoesTileService';
+
+import { IGoesAvailableDate } from '../../types'
+
+interface IProps {
+
+}
+
+interface IState {
+    goesAvailableDates:Array<IGoesAvailableDate>
+}
+
+export default class App extends React.PureComponent<IProps, IState> {
+
+    constructor(props:IProps){
+        super(props);
+
+        this.state = {
+            goesAvailableDates: []
+        }
+    }
+
+    async setGoesAvailableDates(){
+
+        try {
+            const goesAvailableDates = await getAvailableDates();
+            console.log('goesAvailableDates', goesAvailableDates)
+
+            this.setState({
+                goesAvailableDates
+            });
+
+        } catch(err){
+            console.error(err);
+        }
+    }
 
     render(){
         return (
@@ -11,5 +46,9 @@ export default class App extends React.PureComponent {
                 <SceneView />
             </div>
         );
+    }
+
+    componentDidMount(){
+        this.setGoesAvailableDates();
     }
 }
