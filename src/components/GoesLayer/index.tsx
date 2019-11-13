@@ -6,21 +6,41 @@ import config from '../../config';
 
 
 import ISceneView from 'esri/views/SceneView';
-import IMap from 'esri/Map';
+// import IMap from 'esri/Map';
 import IWebTileLayer from 'esri/layers/WebTileLayer';
+import IWatchUtils from 'esri/core/watchUtils';
 import { IGoesAvailableDate } from '../../types';
 
 interface IProps {
     sceneView?:ISceneView,
     goesAvailableDates:Array<IGoesAvailableDate>,
-    index4ActiveDate:number
+    index4ActiveDate:number,
+    isPlaying:boolean
+
+    index4ActiveDateOnChange:(newIndex:number)=>void
 }
 
 const GoesLayer = ({
     sceneView = null,
     goesAvailableDates = [],
-    index4ActiveDate = 0
+    index4ActiveDate = 0,
+    isPlaying = false,
+
+    index4ActiveDateOnChange = ()=>{}
 }:IProps):null => {
+
+    const [ goesLayersInSceneView, setGoesLayersInSceneView ] = useState([] as Array<IWebTileLayer>);
+
+    const unshit2GoesLayersInSceneView = (layer:IWebTileLayer)=>{
+        const layers = [layer, ...goesLayersInSceneView];
+        setGoesLayersInSceneView(layers);
+    };
+
+    const popFromGoesLayersInSceneView = ()=>{
+        const layers = [...goesLayersInSceneView];
+        layers.pop();
+        setGoesLayersInSceneView(layers);
+    };
 
     const getUrlTemplate = (index=0)=>{
         const mVal = goesAvailableDates[index].mValue;
@@ -53,27 +73,89 @@ const GoesLayer = ({
             return null;
         }
         
-    }
+    };
 
-    const addEventsWatcher2GoesLayer = async(goesLayer:IWebTileLayer)=>{
+    const initGoesLayers = async()=>{
+
         try {
-            const layerView = await sceneView.whenLayerView(goesLayer);
-            console.log('layerView 4 goes layer', layerView);
-        } catch(err){
-            console.error('failed to add', err);
-        }
-    }
 
-    const initGoesLayers = async ()=>{
-        try {
-            const goesLayer = await getGoesLayer(index4ActiveDate);
-            sceneView.map.add(goesLayer);
+            const layers = [];
 
-            addEventsWatcher2GoesLayer(goesLayer);
+            for(let i = 2; i >=0 ; i--){
+                const goesLayer = await getGoesLayer(i);
+
+                sceneView.map.add(goesLayer);
+
+                layers.push(goesLayer);
+            }
+
+            setGoesLayersInSceneView(layers);
+
         } catch(err){
             console.error(err);
         }
     };
+
+    const preloadGoesLayer = async (): Promise<IWebTileLayer>=>{
+
+        return new Promise(async(resolve, reject)=>{
+
+            try {
+                type Modules = [
+                    typeof IWatchUtils
+                ];
+    
+                const [ watchUtils ] = await (loadModules([
+                    'esri/core/watchUtils',
+                ]) as Promise<Modules>);
+    
+                const newGoesLayerToAdd = await getGoesLayer(index4ActiveDate + 2);
+                // console.log('newGoesLayerToAdd', newGoesLayerToAdd);
+    
+                sceneView.map.add(newGoesLayerToAdd, 0);
+    
+                const layerView = await sceneView.whenLayerView(newGoesLayerToAdd);
+                // console.log('layerView 4 goes layer', layerView);
+    
+                watchUtils.whenFalseOnce(layerView, 'updating', (updating)=>{
+                    // console.log('preloadGoesLayer is ready');
+                    resolve(newGoesLayerToAdd)
+                });
+    
+            } catch(err){
+                console.error('failed to add', err);
+                reject(err);
+            }
+        });
+
+    };
+
+    const turnOffTopMostGoesLayer = ()=>{
+
+        const goesLayerToTurnOff = goesLayersInSceneView[goesLayersInSceneView.length - 1];
+
+        // console.log('goesLayerToTurnOff', goesLayerToTurnOff)
+
+        sceneView.map.remove(goesLayerToTurnOff);
+
+        popFromGoesLayersInSceneView();
+    };
+
+    const showNextGoesLayer = async()=>{
+
+        try {
+            const layer2Preload = await preloadGoesLayer();
+
+            unshit2GoesLayersInSceneView(layer2Preload);
+
+            const newIdx = index4ActiveDate + 1 < goesAvailableDates.length ? index4ActiveDate + 1 : 0;
+
+            index4ActiveDateOnChange(newIdx);
+
+        } catch(err){
+            console.error(err);
+        }
+    }
 
     useEffect(() => {
         if( sceneView && goesAvailableDates.length ){
@@ -86,6 +168,26 @@ const GoesLayer = ({
             console.log('index4ActiveDate', index4ActiveDate)
         }
     }, [ index4ActiveDate ]);
+
+    useEffect(() => {
+        if( sceneView && goesAvailableDates.length && isPlaying ){
+            // console.log('isPlaying', isPlaying)
+            showNextGoesLayer();
+        }
+    }, [ isPlaying ])
+
+    useEffect(() =>{
+        // console.log('goesLayersInSceneView is changed', goesLayersInSceneView)
+
+        if(goesLayersInSceneView.length > 3){
+            turnOffTopMostGoesLayer();
+        } else {
+            if(isPlaying){
+                showNextGoesLayer();
+            }
+        }
+
+    }, [ goesLayersInSceneView ])
 
     return null;
 }

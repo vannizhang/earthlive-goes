@@ -3,6 +3,7 @@ import * as React from 'react';
 
 import SceneView from '../SceneView';
 import GoesLayer from '../GoesLayer';
+import TimeControl from '../TimeControl'; 
 
 import { getAvailableDates } from '../../services/GoesTileService';
 
@@ -14,7 +15,8 @@ interface IProps {
 
 interface IState {
     goesAvailableDates:Array<IGoesAvailableDate>,
-    index4ActiveDate:number
+    index4ActiveDate:number,
+    isPlaying:boolean
 }
 
 export default class App extends React.PureComponent<IProps, IState> {
@@ -24,8 +26,18 @@ export default class App extends React.PureComponent<IProps, IState> {
 
         this.state = {
             goesAvailableDates: [],
-            index4ActiveDate:0
-        }
+            index4ActiveDate:0,
+            isPlaying:false
+        };
+
+        this.index4ActiveDateOnChange = this.index4ActiveDateOnChange.bind(this);
+        this.toggleIsPlaying = this.toggleIsPlaying.bind(this);
+    }
+
+    index4ActiveDateOnChange(newIndex:number){
+        this.setState({
+            index4ActiveDate: newIndex
+        });
     }
 
     async setGoesAvailableDates(){
@@ -43,8 +55,16 @@ export default class App extends React.PureComponent<IProps, IState> {
         }
     }
 
+    toggleIsPlaying(){
+        const { isPlaying } = this.state;
+
+        this.setState({
+            isPlaying: !isPlaying
+        });
+    }
+
     render(){
-        const { goesAvailableDates, index4ActiveDate } = this.state;
+        const { goesAvailableDates, index4ActiveDate, isPlaying } = this.state;
 
         return (
             <div className='app-content'>
@@ -52,8 +72,18 @@ export default class App extends React.PureComponent<IProps, IState> {
                     <GoesLayer 
                         goesAvailableDates={goesAvailableDates}
                         index4ActiveDate={index4ActiveDate}
+                        isPlaying={isPlaying}
+
+                        index4ActiveDateOnChange={this.index4ActiveDateOnChange}
                     />
                 </SceneView>
+
+                <div className='time-control-wrap'>
+                    <TimeControl 
+                        isPlaying={isPlaying}
+                        onTogglePlay={this.toggleIsPlaying}
+                    />
+                </div>
             </div>
         );
     }
