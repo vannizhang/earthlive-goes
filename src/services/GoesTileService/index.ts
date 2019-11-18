@@ -1,5 +1,6 @@
 import { sendGetRequest } from '../../utils/HttpRequest';
-import config from '../../config';
+// import config from '../../config';
+import { getServiceUrl } from '../../utils/ServiceUrl';
 
 import { IGoesAvailableDate } from '../../types'
 
@@ -29,7 +30,7 @@ const parseDateString = (dateString:string)=>{
 
 
 const getAvailableDates = async (): Promise<Array<IGoesAvailableDate>>=>{
-    const requestUrl = `${config["Goes-Layer-URL"]}?f=json`;
+    const requestUrl = `${getServiceUrl()}?f=json`;
     
     try {
         const metadata = await sendGetRequest(requestUrl) as IGoesLayerMetadata;

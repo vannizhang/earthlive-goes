@@ -1,9 +1,7 @@
 // import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { loadModules } from 'esri-loader';
-
-import config from '../../config';
-
+import { getServiceUrl } from '../../utils/ServiceUrl';
 
 import ISceneView from 'esri/views/SceneView';
 // import IMap from 'esri/Map';
@@ -44,7 +42,7 @@ const GoesLayer = ({
 
     const getUrlTemplate = (index=0)=>{
         const mVal = goesAvailableDates[index].mValue;
-        const baseUrl = config["Goes-Layer-URL"];
+        const baseUrl = getServiceUrl();
         return `${baseUrl}/tile/${mVal}/{level}/{row}/{col}`;
     };
 
@@ -141,20 +139,19 @@ const GoesLayer = ({
         popFromGoesLayersInSceneView();
     };
 
-    const showNextGoesLayer = async()=>{
+    const showActiveGoesLayer = async()=>{
 
         try {
             const layer2Preload = await preloadGoesLayer();
-
             unshit2GoesLayersInSceneView(layer2Preload);
-
-            const newIdx = index4ActiveDate + 1 < goesAvailableDates.length ? index4ActiveDate + 1 : 0;
-
-            index4ActiveDateOnChange(newIdx);
-
         } catch(err){
             console.error(err);
         }
+    }
+
+    const showNextGoesLayer = ()=>{
+        const newIdx = index4ActiveDate + 1 < goesAvailableDates.length ? index4ActiveDate + 1 : 0;
+        index4ActiveDateOnChange(newIdx);
     }
 
     useEffect(() => {
@@ -165,19 +162,20 @@ const GoesLayer = ({
 
     useEffect(() => {
         if( sceneView && goesAvailableDates.length ){
-            console.log('index4ActiveDate', index4ActiveDate)
+            // console.log('index4ActiveDate', index4ActiveDate);
+            showActiveGoesLayer();
         }
     }, [ index4ActiveDate ]);
 
     useEffect(() => {
         if( sceneView && goesAvailableDates.length && isPlaying ){
             // console.log('isPlaying', isPlaying)
-            showNextGoesLayer();
+            showActiveGoesLayer();
         }
     }, [ isPlaying ])
 
     useEffect(() =>{
-        // console.log('goesLayersInSceneView is changed', goesLayersInSceneView)
+        console.log('goesLayersInSceneView is changed', goesLayersInSceneView, isPlaying)
 
         if(goesLayersInSceneView.length > 3){
             turnOffTopMostGoesLayer();

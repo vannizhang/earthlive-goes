@@ -58,7 +58,7 @@ export default class TimeControl extends React.PureComponent<IProps> {
                     <span className="font-size-0 avenir-light">{activeDateLabel}</span>
                 </div>
 
-                <div className="previous-btn widget-btn" onClick={nextAndPreviousBtnOnClick.bind(this, true)}>
+                <div className="previous-btn widget-btn is-disabled">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
