@@ -32,12 +32,27 @@ export default class App extends React.PureComponent<IProps, IState> {
 
         this.index4ActiveDateOnChange = this.index4ActiveDateOnChange.bind(this);
         this.toggleIsPlaying = this.toggleIsPlaying.bind(this);
+        this.move2NextOrPrevDate = this.move2NextOrPrevDate.bind(this);
     }
 
     index4ActiveDateOnChange(newIndex:number){
         this.setState({
             index4ActiveDate: newIndex
         });
+    }
+
+    move2NextOrPrevDate(isDecrement:false){
+        const { index4ActiveDate, goesAvailableDates } = this.state;
+
+        let newIdx = index4ActiveDate;
+
+        if(isDecrement){
+            newIdx = newIdx - 1 >= 0 ? newIdx - 1 : goesAvailableDates.length - 1;
+        } else {
+            newIdx = newIdx + 1 < goesAvailableDates.length ? newIdx + 1 : 0;
+        }
+
+        this.index4ActiveDateOnChange(newIdx);
     }
 
     async setGoesAvailableDates(){
@@ -80,8 +95,11 @@ export default class App extends React.PureComponent<IProps, IState> {
 
                 <div className='time-control-wrap'>
                     <TimeControl 
+                        goesAvailableDates={goesAvailableDates}
+                        index4ActiveDate={index4ActiveDate}
                         isPlaying={isPlaying}
                         onTogglePlay={this.toggleIsPlaying}
+                        nextAndPreviousBtnOnClick={this.move2NextOrPrevDate}
                     />
                 </div>
             </div>

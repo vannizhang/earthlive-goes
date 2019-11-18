@@ -1,4 +1,78 @@
+$height: 100px;
+$textColor: #666;
+$backgroundColor: rgba(255,255,255,1);
+
 .time-control {
-    background: #efefef;
-    padding: .5rem;
+    cursor: default;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow: hidden;
+    height: $height;
+    // box-shadow: 0 0 2px 2px rgba(0,0,0,0.1);    
+    color: $textColor;
+    background: $backgroundColor;
+    pointer-events: all;
+    width: 100%;
+    border-top: 1px solid rgba(255,255,255,.2);
+    border-bottom: 1px solid rgba(255,255,255,.2);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 0 16px 0 rgba(0,0,0,0.05);
+
+    .widget-btn {
+        font-size: 14px;
+        color: #6e6e6e;
+        height: $height;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        cursor: pointer;
+        text-align: center;
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 125ms ease-in-out;
+    }
+
+    .widget-btn:hover{
+        background: rgba(0,0,0,.1);
+    }
+    
+    .play-btn{
+        flex: none;
+        width: 45px;
+        border-right: 1px solid rgba(110,110,110,0.3);
+    }
+
+    .previous-btn{
+        flex: none;
+        width: 32px;
+        padding-left: .25rem;
+        border-left: 1px solid rgba(110,110,110,0.3);
+    }
+
+    .next-btn{
+        flex: none;
+        width: 32px;
+        padding-right: .25rem;
+    }
+
+    .info-window{
+        height: $height;
+        min-width: 160px;
+        flex: none;
+        font-weight: 400;
+        padding: 0 1rem;
+        margin: 0;
+        overflow: hidden;
+        text-align: center;
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: flex-start;
+        // border-right: 1px solid rgba(110,110,110,0.3);
+        line-height: 12px;
+        box-sizing: border-box;
+    }
 }
