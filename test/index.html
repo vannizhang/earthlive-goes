@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Intro to SceneView - Create a 3D map - 4.13</title>
+    <style>
+        html,
+        body,
+        #viewDiv,
+        #container {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            color: #323232;
+            font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .btn{
+            position: absolute;
+            right: 1rem;
+            bottom: 1.5rem;
+            padding: .5rem;
+            z-index: 10;
+            background: #efefef;
+            color: #333;
+            cursor: pointer;
+        }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.13/"></script>
+
+    <script>
+      require([
+        "esri/Map", 
+        "esri/views/MapView", 
+        "esri/views/SceneView", 
+        'esri/layers/WebTileLayer',
+        "esri/Graphic",
+        "esri/geometry/Point",
+        "esri/geometry/Mesh",
+        "esri/core/watchUtils"
+      ], 
+      function(Map, MapView, SceneView, WebTileLayer, Graphic, Point, Mesh, watchUtils ) {
+
+        const mValues = [
+          58074,
+          193064,
+          262626,
+          534792,
+          859452,
+          601101,
+          591546,
+          930671,
+          709109,
+          275804,
+          138625,
+          84535,
+          937135,
+          201821,
+          339040,
+          399994,
+          821586,
+          200738,
+          847986,
+          642360,
+          333539,
+          427947,
+          344084,
+          286503,
+          323602,
+          989372,
+          619685,
+          662449,
+          895352,
+          391531,
+          498159,
+          32996,
+          437498,
+          287162,
+          469202,
+          713301,
+          394144,
+          883967,
+          509639,
+          274626,
+          787717,
+          932756,
+          761252,
+          731338,
+          261528,
+          150726,
+          487865,
+          677845,
+          85516,
+          711472,
+          322024,
+          727720,
+          567311,
+          13298,
+          914547,
+          110935,
+          154131,
+          940144,
+          339170,
+          965781,
+          462937,
+          577834,
+          378485,
+          549095,
+          367352,
+          87293,
+          767940,
+          278440,
+          72158,
+          844099,
+          294670,
+          728275,
+          821459,
+          341598,
+          942199,
+          987035,
+          572823,
+          896630,
+          127738,
+          98655,
+          268525,
+          879485,
+          44643,
+          815081,
+          322126,
+          407900,
+          272978,
+          668700,
+          767098,
+          298420,
+          493944,
+          406809,
+          758507,
+          326954,
+          548962,
+          203394,
+          146105,
+          339701,
+          192707,
+          153217,
+          998132,
+          391390,
+          551742,
+          351866,
+          638085,
+          123989,
+          371561,
+          141562,
+          573935,
+          5306,
+          527081,
+          913844,
+          417319,
+          340220,
+          356543,
+          793070,
+          973968,
+          910602,
+          648968,
+          928306,
+          283995,
+          630349,
+          823048,
+          318885,
+          554046,
+          640609,
+          280259,
+          374684,
+          560378,
+          807422,
+          267452,
+          955814,
+          752500,
+          854719,
+          467176,
+          29966,
+          757205,
+          679594,
+          152728,
+          49205,
+          622084,
+          158745,
+          987164,
+          911579,
+          306120,
+          974967,
+          407124,
+          929859,
+          270599,
+          894017,
+          635679,
+          749072,
+          466036,
+          77881,
+          728193,
+          516360,
+          799088,
+          900992,
+          610401,
+          360908,
+          681996,
+          320385,
+          65691,
+          497045,
+          504798,
+          916769,
+          661447,
+          608558,
+          276975,
+          558603,
+          970687,
+          381746,
+          380851,
+          523248,
+          898061,
+          281238,
+          516008,
+          642752,
+          669502,
+          501894,
+          426108,
+          340941,
+          150128,
+          189888,
+          392800,
+          286661,
+          743204,
+          421146,
+          16243,
+          370461,
+          964617,
+          689212,
+          299929,
+          166192,
+          630442,
+          618143,
+          851008,
+          377922,
+          741597,
+          661753,
+          770817,
+          903373,
+          178659,
+          203264,
+          563484,
+          172232,
+          572077,
+          14982,
+          356088,
+          550335,
+          829497,
+          495059,
+          939861,
+          248391,
+          330078,
+          671060,
+          949239,
+          249961,
+          244591,
+          182605,
+          281804,
+          550405,
+          512720,
+          467155,
+          867831,
+          637735,
+          744260,
+          997379,
+          51137,
+          173445,
+          330177,
+          487440,
+          743224,
+          968035,
+          634283,
+          964098,
+          132545,
+          423626,
+          639442,
+          495379,
+          657321,
+          686218,
+          11063,
+          342691,
+          84458,
+          841831,
+          189173,
+          414057,
+          517827,
+          901971,
+          364798,
+          350884,
+          238593,
+          11422,
+          469191,
+          122990,
+          105057,
+          944513,
+          593283,
+          855525,
+          634188,
+          470451,
+          643347,
+          839743,
+          304915,
+          252065,
+          512418,
+          909484,
+          101685,
+          397284,
+          417266,
+          454954,
+          715611,
+          392727,
+          607958,
+          529263,
+          605783,
+          634135,
+          81192,
+          316597,
+          297595,
+          184655,
+          361740,
+          488247,
+          969869,
+          722475,
+          278586,
+          325775,
+          336770,
+          855790,
+          500288,
+          998608,
+          650360,
+          279218,
+          236747,
+          292169,
+          147870,
+          906233,
+          739721,
+          525512,
+          210812,
+          315074,
+          114000,
+          428805,
+          178964,
+          860205,
+          113994,
+          362766
+        ];
+
+        let index4VisibleItem = 0;
+
+        const getUrlTemplate = (index=0)=>{
+            const mVal = mValues[index] || mValues[0];
+            return `https://earthlive.maptiles.arcgis.com/arcgis/rest/services/GOES/G16TC/MapServer/tile/${mVal}/{level}/{row}/{col}`
+        }
+
+        const goesLayers = [2,1,0].map(index=>{
+          return new WebTileLayer({
+            maxScale: 4000000,
+            urlTemplate: getUrlTemplate(index),
+            // opacity: index === 0 ? 1 : 0.1,
+            // visible: index === 0
+          });
+        });
+
+        // console.log(goesLayers);
+
+        var map = new Map({
+          ground: "world-elevation",
+          layers: goesLayers
+        });
+
+        var view = new SceneView({
+            container: "viewDiv",
+            map: map,
+            scale: 50000000,
+            center: [-85, 10],
+            // alphaCompositingEnabled: true,
+            // qualityProfile: "high",
+            // constraints: {
+            //   altitude: {
+            //       min: 10000000,
+            //       max: 25000000
+            //   }
+            // }
+        });
+
+        // var map = new Map({
+        //   layers: goesLayers
+        // });
+
+        // var view = new MapView({
+        //     map: map,  // References a Map instance
+        //     container: "viewDiv",  // References the ID of a DOM element,
+        //     zoom: 5,
+        //     center: [-100, 35]
+        // });
+
+        const animateGoesLayers = ()=>{
+
+          const goesLayerToTurnOff = goesLayers[2];
+
+          const newGoesLayerToAdd = new WebTileLayer({
+            maxScale: 4000000,
+            urlTemplate: getUrlTemplate(index4VisibleItem + 2),
+            opacity: 1,
+            // visible: false
+          });
+
+          // console.log(newGoesLayerToAdd.tileInfo);
+
+          view.map.add(newGoesLayerToAdd, 0);
+
+          goesLayers.unshift(newGoesLayerToAdd);
+
+          goesLayers.pop();
+
+          // let opacity = 1
+
+          // while(opacity > 0){
+
+          //   goesLayerToTurnOff.opacity = opacity;
+
+          //   opacity -= .1;
+          // }
+
+          view.map.remove(goesLayerToTurnOff);
+
+          watchUtils.whenTrue(newGoesLayerToAdd, "loaded", ()=>{
+            console.log('newGoesLayerToAdd is loaded')
+          });
+
+          // watchUtils.when(view, "stationary", function(updating) {
+          //     console.log('view is stationary')
+          //     // animateGoesLayers();
+          // });
+
+          // console.log(goesLayers)
+        };
+
+        const play = ()=>{
+            const newIdx = index4VisibleItem + 1 < mValues.length ? index4VisibleItem + 1 : 0;
+            index4VisibleItem = newIdx;
+
+            // const urlTemplate = getUrlTemplate(newIdx);
+
+            // // console.log(urlTemplate)
+            // goesLayer.urlTemplate = urlTemplate;
+            // goesLayer.refresh()
+
+            animateGoesLayers();
+        };
+
+        document.querySelector('.js-animate-goes').addEventListener('click', (event)=>{
+            
+            // const screenshot = view.takeScreenshot().then(screenshot=>{
+            //     console.log(screenshot.dataUrl);
+            // })
+            
+            play();
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div class="btn js-animate-goes">Play</div>
+  </body>
+</html>
