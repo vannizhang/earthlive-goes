@@ -26,7 +26,7 @@ export default class App extends React.PureComponent<IProps, IState> {
 
         this.state = {
             goesAvailableDates: [],
-            index4ActiveDate:0,
+            index4ActiveDate:4,
             isPlaying:false
         };
 

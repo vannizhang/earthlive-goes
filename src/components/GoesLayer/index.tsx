@@ -48,7 +48,7 @@ const GoesLayer = ({
         return `${baseUrl}/tile/${mVal}/{level}/{row}/{col}`;
     };
 
-    const getGoesLayer = async(index=0)=>{
+    const getGoesLayer = async(index=index4ActiveDate)=>{
 
         try {
             type Modules = [
