@@ -79,7 +79,7 @@ const GoesLayer = ({
 
             const layers = [];
 
-            for(let i = 2; i >=0 ; i--){
+            for(let i = 1; i >=0 ; i--){
                 const goesLayer = await getGoesLayer(i);
 
                 sceneView.map.add(goesLayer);
@@ -107,7 +107,7 @@ const GoesLayer = ({
                     'esri/core/watchUtils',
                 ]) as Promise<Modules>);
     
-                const newGoesLayerToAdd = await getGoesLayer(index4ActiveDate + 2);
+                const newGoesLayerToAdd = await getGoesLayer(index4ActiveDate + 1);
                 // console.log('newGoesLayerToAdd', newGoesLayerToAdd);
     
                 sceneView.map.add(newGoesLayerToAdd, 0);
@@ -177,7 +177,7 @@ const GoesLayer = ({
     useEffect(() =>{
         console.log('goesLayersInSceneView is changed', goesLayersInSceneView, isPlaying)
 
-        if(goesLayersInSceneView.length > 3){
+        if(goesLayersInSceneView.length > 1){
             turnOffTopMostGoesLayer();
         } else {
             if(isPlaying){
