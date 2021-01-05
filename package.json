@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@types/arcgis-js-api": "^4.13.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "calcite-web": "github:Esri/calcite-web#v1.2.5",
     "date-fns": "^2.7.0",
     "esri-loader": "^2.12.0",
