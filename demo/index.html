@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>GOES Viewer</title>
+    <style>
+        html,
+        body,
+        #viewDiv,
+        #container {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            color: #323232;
+            font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        #timeInfo {
+          position: absolute;
+          top: .5rem;
+          right: .5rem;
+          background-color: rgba(0,0,0,.75);
+          color: #fff;
+          padding: .5rem;
+          z-index: 10;
+          font-size: 1.5rem;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.27/"></script>
+
+    <script>
+      require([
+        "esri/Map", 
+        "esri/views/MapView", 
+        "esri/views/SceneView", 
+        'esri/layers/WebTileLayer',
+        "esri/Graphic",
+        "esri/geometry/Point",
+        "esri/geometry/Mesh",
+        "esri/core/reactiveUtils"
+      ], 
+      function(Map, MapView, SceneView, WebTileLayer, Graphic, Point, Mesh, reactiveUtils ){
+
+        (async()=>{
+
+          const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+          const [lon, lat, zoom] = hashParams.has('@') 
+            ? hashParams.get('@').split(',').map(d=>+d) 
+            : []
+          
+          const animationSpeed = hashParams.has('animationSpeed') ? +hashParams.get('animationSpeed') : 500;
+
+          const numOfAnimationFrames = 72;
+
+          const GOES_Service = `https://earthlive.maptiles.arcgis.com/arcgis/rest/services/GOES/G16TC/MapServer`;
+
+          const layerInfoRes = await fetch(GOES_Service + '?f=json');
+
+          const layerInfo = await layerInfoRes.json()
+
+          const dateTimes = [...layerInfo.views.columns.date]
+            .slice(layerInfo.views.columns.date.length - numOfAnimationFrames)
+
+          const mValues = [...layerInfo.views.columns.select]
+            .slice(layerInfo.views.columns.select.length - numOfAnimationFrames)
+
+          let idxOfCurrentFrame = 0;
+
+          // get URL template for the GOES Layer
+          const getUrlTemplate = (indexOfMValue)=>{
+            indexOfMValue = indexOfMValue % mValues.length;
+            const mVal = mValues[indexOfMValue]
+            return `https://earthlive.maptiles.arcgis.com/arcgis/rest/services/GOES/G16TC/MapServer/tile/${mVal}/{level}/{row}/{col}`
+          }
+
+          // let's have a pool of GOES layes so that we can prefetch some tiles that will be displayed
+          // need to reverse the order so that the early ones can be displayed first
+          const goesLayers = [
+            new WebTileLayer({
+              maxScale: 4000000,
+              urlTemplate: getUrlTemplate(0),
+            }),
+            new WebTileLayer({
+              maxScale: 4000000,
+              urlTemplate: getUrlTemplate(1),
+            }),
+            new WebTileLayer({
+              maxScale: 4000000,
+              urlTemplate: getUrlTemplate(2),
+            }),
+            new WebTileLayer({
+              maxScale: 4000000,
+              urlTemplate: getUrlTemplate(3),
+            }),
+            new WebTileLayer({
+              maxScale: 4000000,
+              urlTemplate: getUrlTemplate(4),
+            }),
+          ].reverse();
+          // console.log(goesLayers);
+
+          const map = new Map({
+            layers: goesLayers
+          });
+
+          const view = new MapView({
+              map: map,  // References a Map instance
+              container: "viewDiv",  // References the ID of a DOM element,
+              zoom: zoom || 5,
+              center: lon && lat ? [lon, lat] : [-90, 35],
+              constraints: {
+                minZoom: 5,
+                maxZoom: 7
+              }
+          });
+
+          const displayTimeOfCurrentFrame = ()=>{
+            const time = dateTimes[idxOfCurrentFrame];
+
+            const YYYY = time.slice(0, 4)
+            const MM = time.slice(4, 6)
+            const DD = time.slice(6, 8)
+
+            const hh = time.slice(9, 11)
+            const mm = time.slice(11, 13)
+
+            const formattedTime = `${YYYY}-${MM}-${DD} ${hh}:${mm}`;
+
+            document.querySelector('#timeInfo').innerHTML = formattedTime;
+          }
+
+          let timeLastFrameWasRendered = performance.now()
+
+          const animateGoesLayers = ()=>{
+            if(performance.now() - timeLastFrameWasRendered < animationSpeed){
+              requestAnimationFrame(animateGoesLayers);
+              return;
+            }
+
+            timeLastFrameWasRendered = performance.now()
+
+            displayTimeOfCurrentFrame()
+
+            const newGoesLayerToAdd = new WebTileLayer({
+              maxScale: 4000000,
+              urlTemplate: getUrlTemplate(
+                (idxOfCurrentFrame + 5) % mValues.length
+              ),
+            });
+
+            view.map.add(newGoesLayerToAdd, 0);
+
+            goesLayers.unshift(newGoesLayerToAdd);
+
+            const goesLayer2Remove = goesLayers.pop();
+
+            view.map.remove(goesLayer2Remove)
+
+            idxOfCurrentFrame = (idxOfCurrentFrame + 1) % mValues.length 
+
+            requestAnimationFrame(animateGoesLayers);
+
+          };
+
+          reactiveUtils.whenOnce(
+            () => view?.stationary)
+            .then((stationary) => {
+              console.log(`View is stationary`)
+              animateGoesLayers()
+            });
+
+        })();
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="timeInfo"></div>
+  </body>
+</html>
