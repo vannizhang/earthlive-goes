@@ -122,17 +122,28 @@
               }
           });
 
+          const addPaddingZero = (num, len)=>{
+            let output = num.toString()
+            while(output.length < len){
+              output = '0' + output;
+            }
+
+            return output
+          }
+
           const displayTimeOfCurrentFrame = ()=>{
             const time = dateTimes[idxOfCurrentFrame];
 
-            const YYYY = time.slice(0, 4)
-            const MM = time.slice(4, 6)
-            const DD = time.slice(6, 8)
+            const YYYY = +time.slice(0, 4)
+            const MM = +time.slice(4, 6)
+            const DD = +time.slice(6, 8)
 
-            const hh = time.slice(9, 11)
-            const mm = time.slice(11, 13)
+            const hh = +time.slice(9, 11)
+            const mm = +time.slice(11, 13)
 
-            const formattedTime = `${YYYY}-${MM}-${DD} ${hh}:${mm}`;
+            const utcDate = new Date(Date.UTC(YYYY, MM-1, DD, hh, mm));
+
+            const formattedTime = `${utcDate.getFullYear()}-${addPaddingZero(utcDate.getMonth()+1, 2)}-${addPaddingZero(utcDate.getDate(), 2)} ${addPaddingZero(utcDate.getHours(), 2)}:${addPaddingZero(utcDate.getMinutes(), 2)}`;
 
             document.querySelector('#timeInfo').innerHTML = formattedTime;
           }
