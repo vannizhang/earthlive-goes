@@ -48,71 +48,61 @@
       ], 
       function(Map, MapView, SceneView, WebTileLayer, Graphic, Point, Mesh, reactiveUtils ){
 
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+        const [lon, lat, zoom] = hashParams.has('@') 
+          ? hashParams.get('@').split(',').map(d=>+d) 
+          : []
+
+        const animationSpeed = hashParams.has('animationSpeed') ? +hashParams.get('animationSpeed') : 500;
+
+        const numOfAnimationFrames = 72;
+
+        const GOES_Service = `https://earthlive.maptiles.arcgis.com/arcgis/rest/services/GOES/G16TC/MapServer`;
+
+        const NUM_GOES_LAYERS = 5;
+
         (async()=>{
-
-          const hashParams = new URLSearchParams(window.location.hash.slice(1));
-
-          const [lon, lat, zoom] = hashParams.has('@') 
-            ? hashParams.get('@').split(',').map(d=>+d) 
-            : []
-          
-          const animationSpeed = hashParams.has('animationSpeed') ? +hashParams.get('animationSpeed') : 500;
-
-          const numOfAnimationFrames = 72;
-
-          const GOES_Service = `https://earthlive.maptiles.arcgis.com/arcgis/rest/services/GOES/G16TC/MapServer`;
-
-          const layerInfoRes = await fetch(GOES_Service + '?f=json');
-
-          const layerInfo = await layerInfoRes.json()
-
-          const dateTimes = [...layerInfo.views.columns.date]
-            .slice(layerInfo.views.columns.date.length - numOfAnimationFrames)
-
-          const mValues = [...layerInfo.views.columns.select]
-            .slice(layerInfo.views.columns.select.length - numOfAnimationFrames)
-
+          let dateTimes = [];
+          let mValues = [];
           let idxOfCurrentFrame = 0;
 
           // get URL template for the GOES Layer
           const getUrlTemplate = (indexOfMValue)=>{
+            if(!mValues.length){
+              return null
+            }
+
             indexOfMValue = indexOfMValue % mValues.length;
             const mVal = mValues[indexOfMValue]
-            return `https://earthlive.maptiles.arcgis.com/arcgis/rest/services/GOES/G16TC/MapServer/tile/${mVal}/{level}/{row}/{col}`
+            return `${GOES_Service}/tile/${mVal}/{level}/{row}/{col}`
           }
 
-          // let's have a pool of GOES layes so that we can prefetch some tiles that will be displayed
-          // need to reverse the order so that the early ones can be displayed first
-          const goesLayers = [
-            new WebTileLayer({
-              maxScale: 4000000,
-              urlTemplate: getUrlTemplate(0),
-            }),
-            new WebTileLayer({
-              maxScale: 4000000,
-              urlTemplate: getUrlTemplate(1),
-            }),
-            new WebTileLayer({
-              maxScale: 4000000,
-              urlTemplate: getUrlTemplate(2),
-            }),
-            new WebTileLayer({
-              maxScale: 4000000,
-              urlTemplate: getUrlTemplate(3),
-            }),
-            new WebTileLayer({
-              maxScale: 4000000,
-              urlTemplate: getUrlTemplate(4),
-            }),
-          ].reverse();
-          // console.log(goesLayers);
-
-          const map = new Map({
-            layers: goesLayers
-          });
-
           const view = new MapView({
-              map: map,  // References a Map instance
+              map: new Map({
+                layers: [
+                  new WebTileLayer({
+                    maxScale: 4000000,
+                    // urlTemplate: getUrlTemplate(0),
+                  }),
+                  new WebTileLayer({
+                    maxScale: 4000000,
+                    // urlTemplate: getUrlTemplate(1),
+                  }),
+                  new WebTileLayer({
+                    maxScale: 4000000,
+                    // urlTemplate: getUrlTemplate(2),
+                  }),
+                  new WebTileLayer({
+                    maxScale: 4000000,
+                    // urlTemplate: getUrlTemplate(3),
+                  }),
+                  new WebTileLayer({
+                    maxScale: 4000000,
+                    // urlTemplate: getUrlTemplate(4),
+                  }),
+                ]
+              }),  // References a Map instance
               container: "viewDiv",  // References the ID of a DOM element,
               zoom: zoom || 5,
               center: lon && lat ? [lon, lat] : [-90, 35],
@@ -121,6 +111,83 @@
                 maxZoom: 7
               }
           });
+
+          const requestNewAnimationPlayBack = async()=>{
+            const layerInfoRes = await fetch(GOES_Service + '?f=json');
+
+            const layerInfo = await layerInfoRes.json()
+
+            dateTimes = [...layerInfo.views.columns.date]
+              .slice(layerInfo.views.columns.date.length - numOfAnimationFrames)
+
+            mValues = [...layerInfo.views.columns.select]
+              .slice(layerInfo.views.columns.select.length - numOfAnimationFrames)
+
+            idxOfCurrentFrame = 0;
+
+            // we have a stack of GOES layes so that we can prefetch some tiles that will be displayed.
+            // the first item in the stack should have the latest timestamp
+            for(let i = 0; i < NUM_GOES_LAYERS; i++){
+              view.map.layers[i] = getUrlTemplate(NUM_GOES_LAYERS - i - 1)
+            }
+
+            // let's have a pool of GOES layes so that we can prefetch some tiles that will be displayed
+            // need to reverse the order so that the early ones can be displayed first
+            // view.map.layers = [
+            //   new WebTileLayer({
+            //     maxScale: 4000000,
+            //     urlTemplate: getUrlTemplate(0),
+            //   }),
+            //   new WebTileLayer({
+            //     maxScale: 4000000,
+            //     urlTemplate: getUrlTemplate(1),
+            //   }),
+            //   new WebTileLayer({
+            //     maxScale: 4000000,
+            //     urlTemplate: getUrlTemplate(2),
+            //   }),
+            //   new WebTileLayer({
+            //     maxScale: 4000000,
+            //     urlTemplate: getUrlTemplate(3),
+            //   }),
+            //   new WebTileLayer({
+            //     maxScale: 4000000,
+            //     urlTemplate: getUrlTemplate(4),
+            //   }),
+            // ].reverse()
+
+            animateGoesLayers()
+          }
+
+          // // let's have a pool of GOES layes so that we can prefetch some tiles that will be displayed
+          // // need to reverse the order so that the early ones can be displayed first
+          // const goesLayers = [
+          //   new WebTileLayer({
+          //     maxScale: 4000000,
+          //     urlTemplate: getUrlTemplate(0),
+          //   }),
+          //   new WebTileLayer({
+          //     maxScale: 4000000,
+          //     urlTemplate: getUrlTemplate(1),
+          //   }),
+          //   new WebTileLayer({
+          //     maxScale: 4000000,
+          //     urlTemplate: getUrlTemplate(2),
+          //   }),
+          //   new WebTileLayer({
+          //     maxScale: 4000000,
+          //     urlTemplate: getUrlTemplate(3),
+          //   }),
+          //   new WebTileLayer({
+          //     maxScale: 4000000,
+          //     urlTemplate: getUrlTemplate(4),
+          //   }),
+          // ].reverse();
+          // // console.log(goesLayers);
+
+          // const map = new Map({
+          //   layers: []
+          // });
 
           const addPaddingZero = (num, len)=>{
             let output = num.toString()
@@ -167,29 +234,39 @@
             const newGoesLayerToAdd = new WebTileLayer({
               maxScale: 4000000,
               urlTemplate: getUrlTemplate(
-                (idxOfCurrentFrame + 5) % mValues.length
+                (idxOfCurrentFrame + NUM_GOES_LAYERS) % mValues.length
               ),
             });
 
-            view.map.add(newGoesLayerToAdd, 0);
+            // view.map.add(newGoesLayerToAdd, 0);
 
-            goesLayers.unshift(newGoesLayerToAdd);
-
-            const goesLayer2Remove = goesLayers.pop();
-
-            view.map.remove(goesLayer2Remove)
+            view.map.layers.unshift(newGoesLayerToAdd);
 
             idxOfCurrentFrame = (idxOfCurrentFrame + 1) % mValues.length 
 
-            requestAnimationFrame(animateGoesLayers);
+            if(idxOfCurrentFrame !== 0){
+              const goesLayer2Remove = view.map.layers.pop();
 
+              view.map.remove(goesLayer2Remove)
+
+              requestAnimationFrame(animateGoesLayers);
+            } else {
+              setTimeout(()=>{
+
+                const goesLayer2Remove = view.map.layers.pop();
+
+                view.map.remove(goesLayer2Remove)
+
+                requestNewAnimationPlayBack()
+              }, 8000)
+            }
           };
 
           reactiveUtils.whenOnce(
             () => view?.stationary)
             .then((stationary) => {
               console.log(`View is stationary`)
-              animateGoesLayers()
+              requestNewAnimationPlayBack()
             });
 
         })();
